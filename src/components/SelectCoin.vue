@@ -1,10 +1,97 @@
-const SelectCoin = Vue.component('select-coin', {
-    template: '#select-coin-template',
+<template>
+  <div class="ui raised segment main-box">
+    <div class="ui form">
+      <h1>CryptoToken Converter</h1>
+      <p>This service allows you to quickly convert between two different cryptocurrencies or tokens.</p>
+      <p>
+        To use it, simply select the coin you want to convert from, and the coin you want to convert it into.
+        After selecting a "from coin", the "to coin" list will refresh and show the coins you can convert 
+        into, based on your "from coin" selection.
+      </p>
+      <p>
+        Once you've selected both a "from" and "to" coin, you'll be able to enter a destination address or 
+        account (where do we send your converted coins to?).
+      </p>
+      <p>
+        If your destination coin ("to coin") uses crypto addresses (e.g. Bitcoin), enter a crypto address. 
+        If your destination coin uses account names (e.g. SteemEngine tokens), enter an account name.
+      </p>
+      <h3>Select two coins to convert between</h3>
+      <h4>After selecting a "from coin", the "to coin" options will update.</h4>
+      <div class="field">
+        <label>From Coin</label>
+        <select
+          id="from-coin-list"
+          v-model="select_form.from_coin"
+          class="dropdown"
+        >
+          <option
+            :key="'nocoinselected'"
+            :value="'nocoinselected'"
+          >
+            --- Please Select a Coin ---
+          </option>
+          <option
+            v-for="coin of from_coins"
+            :key="'from_' + coin.symbol"
+            :value="coin.symbol"
+          >
+            {{ coin.display_name }} ({{ coin.symbol }})
+          </option>
+        </select>
+      </div>
+      <div class="field">
+        <label>To Coin</label>
+        <select
+          id="to-coin-list"
+          v-model="select_form.to_coin"
+          class="dropdown"
+        >
+          <option
+            :key="'nocoinselected'"
+            :value="'nocoinselected'"
+          >
+            --- Please Select a Coin ---
+          </option>
+          <option
+            v-for="coin of to_coins"
+            :key="'to_' + coin.symbol"
+            :value="coin.symbol"
+          >
+            {{ coin.display_name }} ({{ coin.symbol }})
+          </option>
+        </select>
+      </div>
+      <div
+        v-if="select_form.to_coin != 'nocoinselected'"
+        class="field"
+      >
+        <label>Where should we send your <strong>{{ get_coin_name(select_form.to_coin) }}</strong>?</label>
+        <input
+          v-model="select_form.destination"
+          type="text"
+          placeholder="Destination address (or account name if the network uses accounts, such as SteemEngine)"
+        >
+      </div>
+      <button
+        v-if="select_form.to_coin != 'nocoinselected'"
+        class="ui button green"
+        @click="convert"
+      >
+        Start conversion from {{ select_form.from_coin }} to {{ select_form.to_coin }}
+      </button>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+    name: 'SelectCoin',
     props: [],
     data: function() {
         return {
-            pairs: [],
-            coins: [],
+            // pairs: [],
+            // coins: [],
             select_form: {
                 destination: '',
                 from_coin: 'nocoinselected',
@@ -13,6 +100,8 @@ const SelectCoin = Vue.component('select-coin', {
         }
     },
     computed: {
+        coins() { return this.$store.state.coins; },
+        pairs() { return this.$store.state.pairs; },
         from_coins: function() {
             var vm = this;
             var form = this.select_form;
@@ -55,8 +144,8 @@ const SelectCoin = Vue.component('select-coin', {
         }
     },
     beforeMount: async function() {
-        this.coins = await coin_api.load_coins();
-        this.pairs = await coin_api.load_pairs();
+        // this.coins = await this.$coinapi.load_coins();
+        // this.pairs = await this.$coinapi.load_pairs();
     },
     mounted: function () {
         $('select.dropdown').dropdown();
@@ -69,11 +158,11 @@ const SelectCoin = Vue.component('select-coin', {
 
                 if (tc.length > 0) {
                     console.log('watch.form - setting "to coin" dropdown to:', tc[0]['symbol']);
-                    Vue.set(this.select_form, 'to_coin', tc[0]['symbol']);
+                    this.$set(this.select_form, 'to_coin', tc[0]['symbol']);
                     // this.to_coin = tc[0]['symbol']
                 } else {
                     console.log('watch.form - setting "to coin" dropdown to nocoinselected');
-                    Vue.set(this.select_form, 'to_coin', 'nocoinselected');
+                    this.$set(this.select_form, 'to_coin', 'nocoinselected');
                 }
             }
             this.$emit('input', this.select_form)
@@ -104,5 +193,7 @@ const SelectCoin = Vue.component('select-coin', {
             var f = this.select_form;
             this.$router.push({ name: 'convert', params: {from: f.from_coin, to: f.to_coin, destination: f.destination}})
         }
-    }
-});
+    },
+    template: '#select-coin-template'
+}
+</script>
