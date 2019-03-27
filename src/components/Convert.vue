@@ -68,7 +68,7 @@ export default {
         }
     },
     created() {
-        coin_api.convert(this.from, this.to, this.destination).then((data) => {
+        this.$coinapi.convert(this.from, this.to, this.destination).then((data) => {
             this.convdata = data;
             this.loading = false;
         }).catch(err => {
